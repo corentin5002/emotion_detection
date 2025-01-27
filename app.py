@@ -3,8 +3,6 @@ from functions import *
 
 
 def main():
-    import_custom_style()
-
     # region sidebar
     st.sidebar.title('MotusDetect Hexagone')
 
@@ -18,7 +16,7 @@ def main():
         st.sidebar.write("Caméras connectées:")
         display_camera_index = st.sidebar.selectbox('Choix de la caméra', display_camera_list.keys())
 
-        # camera_index = display_camera_list[display_camera_index]
+        camera_index = display_camera_list[display_camera_index]
     else:
         st.siderbar.write("No cameras found!")
 

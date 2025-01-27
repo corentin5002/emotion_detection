@@ -37,7 +37,6 @@ def display_camera_flux(camera, options=None):
             apply_options(frame, options)
 
         # TODO: import model here
-
         # Display the frame
         stframe.image(frame, channels="RGB", use_container_width=True)
 
