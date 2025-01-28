@@ -1,6 +1,6 @@
 import cv2 as cv
 import streamlit as st
-
+import mediapipe as mp
 
 def get_camera_list():
     available_cameras = []
@@ -24,24 +24,36 @@ def display_camera_flux(camera, options=None):
     stframe = st.empty()  # Placeholder for the video frames
     st.write("Press 'Stop' in the Streamlit menu to stop the feed.")
 
-    while True:
-        # Get frames from the camera
-        ret, frame = cap.read()
-        if not ret:
-            st.error("Failed to capture frame from the camera. Exiting...")
-            break
+    mp_face_detection = mp.solutions.face_detection
+    mp_drawing = mp.solutions.drawing_utils
 
-        frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+    with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detection:
 
-        if len(options):
-            apply_options(frame, options)
+        while True:
+            # Get frames from the camera
+            ret, frame = cap.read()
+            if not ret:
+                st.error("Failed to capture frame from the camera. Exiting...")
+                break
 
-        # TODO: import model here
-        # Display the frame
-        stframe.image(frame, channels="RGB", use_container_width=True)
+            frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+            # if len(options):
+            #     apply_options(frame, options)
 
-    # Release the video capture
-    cap.release()
+            # TODO: import model here
+            results = face_detection.process(frame_rgb)
+
+            if results.detections:
+                for detection in results.detections:
+                    mp_drawing.draw_detection(frame, detection)
+
+            frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+
+            # Display the frame
+            stframe.image(frame, channels="RGB", use_container_width=True)
+
+        # Release the video capture
+        cap.release()
 
 
 def apply_options(frame, options):

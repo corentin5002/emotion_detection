@@ -1,6 +1,6 @@
+# import tensorflow as tf
 import streamlit as st
-import tensorflow as tf
-from functions import *
+import functions as fn
 
 
 def main():
@@ -8,9 +8,9 @@ def main():
     st.sidebar.title('MotusDetect Hexagone')
 
     # Camera selector
-    camera_list = get_camera_list()
+    camera_list = fn.get_camera_list()
 
-    display_camera_list = { selectbox_camera_list(camera_index) : camera_index for camera_index in camera_list}
+    display_camera_list = { fn.selectbox_camera_list(camera_index) : camera_index for camera_index in camera_list}
 
     camera_index = None
     if camera_list:
@@ -47,7 +47,7 @@ def main():
     st.write('Flux camera')
 
     if camera_index is not None:
-        display_camera_flux(camera_index, options)
+        fn.display_camera_flux(camera_index, options)
     # region page content
 
 if __name__ == '__main__':
