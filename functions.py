@@ -1,6 +1,16 @@
 import cv2 as cv
 import streamlit as st
 import mediapipe as mp
+import tensorflow as tf
+import numpy as np
+
+# Liste des émotions (à adapter selon votre dataset)
+emotions = ["Colere", "Degout", "Peur", "Bonheur", "Neutre", "Tristesse", "Surprise"]
+
+def get_model():
+    # Charger le modèle de prédiction d'émotion
+    model = tf.keras.models.load_model("face_modele.h5")
+    return model
 
 def get_camera_list():
     available_cameras = []
@@ -26,6 +36,7 @@ def display_camera_flux(camera, options=None):
 
     mp_face_detection = mp.solutions.face_detection
     mp_drawing = mp.solutions.drawing_utils
+    model = get_model()
 
     with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detection:
 
@@ -37,14 +48,27 @@ def display_camera_flux(camera, options=None):
                 break
 
             frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-            # if len(options):
-            #     apply_options(frame, options)
-
-            # TODO: import model here
             results = face_detection.process(frame_rgb)
 
             if results.detections:
                 for detection in results.detections:
+                    bboxC = detection.location_data.relative_bounding_box
+                    ih, iw, _ = frame.shape
+                    x, y, w, h = (int(bboxC.xmin * iw), int(bboxC.ymin * ih), 
+                                  int(bboxC.width * iw), int(bboxC.height * ih))
+
+                    face = frame[y:y+h, x:x+w]  # Extraire le visage
+
+                    if face.size > 0:  # Vérifier si un visage a bien été extrait
+                        face_input = preprocess_face(face)
+                        predictions = model.predict(face_input)
+                        emotion_label = emotions[np.argmax(predictions)]
+
+                        # Affichage de l'émotion détectée
+                        cv.putText(frame, emotion_label, (x, y-10), 
+                                   cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+                    # Dessiner le rectangle autour du visage
                     mp_drawing.draw_detection(frame, detection)
 
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -71,3 +95,12 @@ def shift_color(frame, color_canal, value):
     channel *= value / 100
     channel = channel.astype('uint8')
     frame[:, :, color_canal] = channel
+
+def preprocess_face(face_image):
+    """Prépare l'image du visage pour la prédiction du modèle."""
+    target_size = (48, 48)  # Adapter selon la taille d'entrée du modèle
+    face_resized = cv.resize(face_image, target_size)
+    face_gray = cv.cvtColor(face_resized, cv.COLOR_BGR2GRAY)
+    face_normalized = face_gray / 255.0  # Normalisation
+    face_input = np.expand_dims(face_normalized, axis=[0, -1])  # Ajout des dimensions batch et channel
+    return face_input
