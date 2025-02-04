@@ -47,7 +47,8 @@ def main():
     st.write('Flux camera')
 
     if camera_index is not None:
-        fn.display_camera_flux(camera_index, options)
+        # fn.display_camera_flux(camera_index, options)
+        fn.display_camera_flux_onnx(camera_index, options)
     # region page content
 
 if __name__ == '__main__':
